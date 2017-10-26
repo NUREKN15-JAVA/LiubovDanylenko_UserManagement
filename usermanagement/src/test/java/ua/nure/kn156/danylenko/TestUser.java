@@ -6,8 +6,10 @@ import java.util.Date;
 import junit.framework.TestCase;
 
 public class TestUser extends TestCase {
-
-	private static final int AGE = 19;
+	/**
+	 *  Current user's date of birth that compare with object's date of birth
+	 */
+	private static final int AGE = 20;
 	private User user;
 	private Date date;
 
@@ -47,7 +49,7 @@ public class TestUser extends TestCase {
 	}
 
 	public void testGetAge() {
-		user.setDate(date);
+		user.setDateOfBirth(date);
 		assertEquals(AGE, user.getAge());
 	}
 

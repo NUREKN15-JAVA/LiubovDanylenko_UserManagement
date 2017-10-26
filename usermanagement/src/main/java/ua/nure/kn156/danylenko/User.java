@@ -8,6 +8,15 @@ public class User {
 	private String firstName;
 	private String lastName;
 	private Date date;
+	public User (User user){
+		id=user.getId();
+		firstName=user.getFirstName();
+		lastName=user.getLastName();
+		date=user.getDateOfBirth();
+	}
+	public User() {
+		
+	}
 	public Long getId() {
 		return id;
 	}
@@ -26,10 +35,10 @@ public class User {
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
 	}
-	public Date getDate() {
+	public Date getDateOfBirth() {
 		return date;
 	}
-	public void setDate(Date date) {
+	public void setDateOfBirth(Date date) {
 		this.date = date;
 	}
 	
@@ -45,7 +54,7 @@ public class User {
     	Calendar calendar=Calendar.getInstance();
     	long currentYear=calendar.get(Calendar.YEAR);
     	long currentDayOfYear=calendar.get(Calendar.DAY_OF_YEAR);
-    	calendar.setTime(getDate());
+    	calendar.setTime(getDateOfBirth());
     	long yearOfBirth=calendar.get(Calendar.YEAR);
     	long dayOfBirthOfYear=calendar.get(Calendar.DAY_OF_YEAR);
     	if (currentDayOfYear<dayOfBirthOfYear)
