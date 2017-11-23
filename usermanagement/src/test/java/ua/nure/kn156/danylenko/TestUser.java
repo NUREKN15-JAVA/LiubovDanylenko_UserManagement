@@ -25,7 +25,7 @@ public class TestUser extends TestCase {
 	public void testGetFullName() {
 		user.setFirstName("Liubov");
 		user.setLastName("Danylenko");
-		assertEquals("Danylenko, Liubov", user.getFullName());
+		assertEquals("Danylenko,Liubov", user.getFullName());
 	}
 
 	public void testGetFirstNameThrowsException() {
