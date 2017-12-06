@@ -14,23 +14,24 @@ import ua.nure.kn156.danylenko.User;
 
 class HsqldbUserDao implements UserDAO {
 	/**
-	 * UPDATE_QUERY, INSERT_QUERY, DELETE_QUERY, SELECT_BY_ID, SELECT_ALL_QUERY constants for updating, inserting,
-	 * deleting or selection data from db table
+	 * UPDATE_QUERY, INSERT_QUERY, DELETE_QUERY, SELECT_BY_ID, SELECT_ALL_QUERY
+	 * constants for updating, inserting, deleting or selection data from db table
 	 */
 	private static final String UPDATE_QUERY = "UPDATE users SET firstname=?, lastname=?, dateofbirth=? WHERE id=?";
 	private static final String SELECT_BY_ID = "SELECT id, firstname, lastname, dateofbirth FROM users WHERE id=?";
 	private static final String SELECT_ALL_QUERY = "SELECT id, firstname, lastname, dateofbirth FROM users";
 	private static final String INSERT_QUERY = "INSERT INTO users (firstname, lastname, dateofbirth) VALUES (?, ?, ?)";
 	private static final String DELETE_QUERY = "DELETE FROM users WHERE id=?";
+	private static final String SELECT_BY_NAMES = "SELECT id, firstname, lastname, dateofbirth FROM users WHERE firstname=? and lastname=?" ;
 	private ConnectionFactory connectionFactory;
-	
-	public HsqldbUserDao(){
+
+	public HsqldbUserDao() {
 	}
-	
-	public HsqldbUserDao(ConnectionFactory connectionFactory){
+
+	public HsqldbUserDao(ConnectionFactory connectionFactory) {
 		this.connectionFactory = connectionFactory;
 	}
-	
+
 	public ConnectionFactory getConnectionFactory() {
 		return connectionFactory;
 	}
@@ -41,19 +42,17 @@ class HsqldbUserDao implements UserDAO {
 
 	@Override
 	public User create(User user) throws DatabaseException {
-		try{
+		try {
 			Connection connection = connectionFactory.createConnection();
-			PreparedStatement statement = connection
-					.prepareStatement(INSERT_QUERY);
+			PreparedStatement statement = connection.prepareStatement(INSERT_QUERY);
 			statement.setString(1, user.getFirstName());
 			statement.setString(2, user.getLastName());
 			statement.setDate(3, new Date(user.getDateOfBirth().getTime()));
 			int n = statement.executeUpdate();
-			if (n!=1) {
+			if (n != 1) {
 				throw new DatabaseException("Number of inserted rows: " + n);
 			}
-			CallableStatement callableStatement = connection
-					.prepareCall("call IDENTITY()");	
+			CallableStatement callableStatement = connection.prepareCall("call IDENTITY()");
 			ResultSet keys = callableStatement.executeQuery();
 			User insertedUser = new User(user);
 			if (keys.next()) {
@@ -64,10 +63,9 @@ class HsqldbUserDao implements UserDAO {
 			statement.close();
 			connection.close();
 			return insertedUser;
-		} catch (DatabaseException e) 
-		{
+		} catch (DatabaseException e) {
 			throw e;
-		} catch(SQLException e) {
+		} catch (SQLException e) {
 			throw new DatabaseException(e);
 		}
 	}
@@ -77,8 +75,7 @@ class HsqldbUserDao implements UserDAO {
 		User user = new User();
 		try {
 			Connection connection = connectionFactory.createConnection();
-			PreparedStatement statement = connection
-					.prepareStatement(SELECT_BY_ID);
+			PreparedStatement statement = connection.prepareStatement(SELECT_BY_ID);
 			statement.setLong(1, id.longValue());
 			ResultSet resultSet = statement.executeQuery();
 			while (resultSet.next()) {
@@ -92,23 +89,22 @@ class HsqldbUserDao implements UserDAO {
 		} catch (SQLException e) {
 			throw new DatabaseException(e);
 		}
-				
+
 		return user;
-		}
+	}
 
 	@Override
 	public void update(User user) throws DatabaseException {
 		try {
 			Connection connection = connectionFactory.createConnection();
-			PreparedStatement statement = connection
-					.prepareStatement(UPDATE_QUERY);
+			PreparedStatement statement = connection.prepareStatement(UPDATE_QUERY);
 			statement.setString(1, user.getFirstName());
 			statement.setString(2, user.getLastName());
 			statement.setDate(3, new Date(user.getDateOfBirth().getTime()));
 			statement.setLong(4, user.getId().longValue());
-			
+
 			int n = statement.executeUpdate();
-			if (n!=1) {
+			if (n != 1) {
 				throw new DatabaseException("Number of updated rows: " + n);
 			}
 			statement.close();
@@ -118,19 +114,17 @@ class HsqldbUserDao implements UserDAO {
 		} catch (SQLException e) {
 			throw new DatabaseException(e);
 		}
-			
+
 	}
 
-	
 	@Override
 	public void delete(User user) throws DatabaseException {
 		try {
 			Connection connection = connectionFactory.createConnection();
-			PreparedStatement statement = connection
-					.prepareStatement(DELETE_QUERY);
+			PreparedStatement statement = connection.prepareStatement(DELETE_QUERY);
 			statement.setLong(1, user.getId().longValue());
 			int n = statement.executeUpdate();
-			if (n!=1) {
+			if (n != 1) {
 				throw new DatabaseException("Number of deleted rows: " + n);
 			}
 			statement.close();
@@ -140,14 +134,13 @@ class HsqldbUserDao implements UserDAO {
 		} catch (SQLException e) {
 			throw new DatabaseException(e);
 		}
-				
+
 	}
-	
 
 	@Override
 	public Collection<User> findAll() throws DatabaseException {
 		Collection result = new LinkedList();
-		
+
 		try {
 			Connection connection = connectionFactory.createConnection();
 			Statement statement = connection.createStatement();
@@ -168,7 +161,62 @@ class HsqldbUserDao implements UserDAO {
 		} catch (SQLException e) {
 			throw new DatabaseException(e);
 		}
-				
+
+		return result;
+	}
+
+	@Override
+	public Collection findAll(String firstName, String lastName) throws DatabaseException {
+		Collection result = new LinkedList();
+
+		try {
+			Connection connection = connectionFactory.createConnection();
+			PreparedStatement statement = connection.prepareStatement(SELECT_BY_NAMES);
+			statement.setString(1, firstName);
+			statement.setString(2, lastName);
+			ResultSet resultSet = statement.executeQuery();
+			while (resultSet.next()) {
+				User user = new User();
+				user.setId(new Long(resultSet.getLong(1)));
+				user.setFirstName(new String(resultSet.getString(2)));
+				user.setLastName(new String(resultSet.getString(3)));
+				user.setDateOfBirth(resultSet.getDate(4));
+				result.add(user);
+			}
+
+		} catch (DatabaseException e) {
+			throw e;
+		} catch (SQLException e) {
+			throw new DatabaseException(e);
+		}
+		return result;
+
+	}
+
+	@Override
+	public Collection find(String firstName, String lastName) throws DatabaseException {
+		Collection result = new LinkedList();
+
+		try {
+			Connection connection = connectionFactory.createConnection();
+			PreparedStatement statement = connection.prepareStatement(SELECT_BY_NAMES);
+			statement.setString(1, firstName);
+			statement.setString(2, lastName);
+			ResultSet resultSet = statement.executeQuery();
+			while (resultSet.next()) {
+				User user = new User();
+				user.setId(new Long(resultSet.getLong(1)));
+				user.setFirstName(new String(resultSet.getString(2)));
+				user.setLastName(new String(resultSet.getString(3)));
+				user.setDateOfBirth(resultSet.getDate(4));
+				result.add(user);
+			}
+
+		} catch (DatabaseException e) {
+			throw e;
+		} catch (SQLException e) {
+			throw new DatabaseException(e);
+		}
 		return result;
 	}
 
